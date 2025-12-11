@@ -14,6 +14,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       LoadDashboard event,
       Emitter<DashboardState> emit,
       ) async {
+    print('LoadDashboard: ${event.year} ${event.month}');
     emit(DashboardLoading());
 
 

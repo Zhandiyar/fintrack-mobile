@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../blocs/analytics/analytics_state.dart';
-import '../../models/analytics_summary.dart';
+
+import '../models/period_type.dart';
 
 const double _kPadding = 16.0;
 
@@ -23,6 +23,8 @@ class DateSelector extends StatelessWidget {
 
   String _formatDate() {
     switch (selectedPeriod) {
+      case PeriodType.DAY:
+        return DateFormat('d MMMM y', 'ru').format(selectedDate);
       case PeriodType.WEEK:
         return DateFormat('d MMMM y', 'ru').format(selectedDate);
       case PeriodType.MONTH:
@@ -31,6 +33,7 @@ class DateSelector extends StatelessWidget {
         return DateFormat('y', 'ru').format(selectedDate);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +65,9 @@ class DateSelector extends StatelessWidget {
                     break;
                   case PeriodType.YEAR:
                     newDate = DateTime(selectedDate.year - 1);
+                    break;
+                  case PeriodType.DAY:
+                    newDate = selectedDate.subtract(const Duration(days: 1));
                     break;
                 }
                 if (!newDate.isBefore(firstDate)) {
@@ -111,6 +117,9 @@ class DateSelector extends StatelessWidget {
                     break;
                   case PeriodType.YEAR:
                     newDate = DateTime(selectedDate.year + 1);
+                    break;
+                  case PeriodType.DAY:
+                    newDate = selectedDate.add(const Duration(days: 1));
                     break;
                 }
                 if (!newDate.isAfter(lastDate)) {

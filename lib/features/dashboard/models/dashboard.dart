@@ -1,7 +1,7 @@
-
+import 'package:equatable/equatable.dart';
 import '../../transaction/models/localized_transaction_response.dart';
 
-class DashboardDto {
+class DashboardDto extends Equatable {
   final double totalIncome;
   final double totalExpense;
   final double balance;
@@ -12,7 +12,7 @@ class DashboardDto {
   final String periodLabel;
   final List<LocalizedTransactionResponseDto> recentTransactions;
 
-  DashboardDto({
+  const DashboardDto({
     required this.totalIncome,
     required this.totalExpense,
     required this.balance,
@@ -39,4 +39,17 @@ class DashboardDto {
           .toList(),
     );
   }
+
+  @override
+  List<Object?> get props => [
+    totalIncome,
+    totalExpense,
+    balance,
+    currentPeriodIncome,
+    currentPeriodExpense,
+    incomeChange,
+    expenseChange,
+    periodLabel,
+    recentTransactions,
+  ];
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../blocs/analytics/analytics_state.dart';
-import '../../models/analytics_summary.dart';
+
+import '../models/period_type.dart';
+
 
 const double _kPadding = 16.0;
 
@@ -23,6 +24,7 @@ class PeriodSelector extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            _buildPeriodButton(context, PeriodType.DAY, 'День'),
             _buildPeriodButton(context, PeriodType.WEEK, 'Неделя'),
             _buildPeriodButton(context, PeriodType.MONTH, 'Месяц'),
             _buildPeriodButton(context, PeriodType.YEAR, 'Год'),

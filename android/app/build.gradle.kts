@@ -15,7 +15,7 @@ keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
 android {
     namespace = "kz.finance.fintrack"
-    compileSdk = 34
+    compileSdk = 35
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -41,12 +41,12 @@ android {
     defaultConfig {
         applicationId = "kz.finance.fintrack"
         minSdk = 21
-        targetSdk = 34
-        versionCode = 2
-        versionName = "1.0.1"
+        targetSdk = 35
+        versionCode = 11
+        versionName = "1.1.0"
         multiDexEnabled = true
-        
-        manifestPlaceholders["hostName"] = "fintrack.kz"
+
+        manifestPlaceholders["hostName"] = "fin-track.pro"
         
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
@@ -101,9 +101,22 @@ dependencies {
     implementation("androidx.window:window:1.0.0")
     implementation("androidx.window:window-java:1.0.0")
     implementation("androidx.annotation:annotation:1.7.0")
-    implementation("com.google.android.play:core:1.10.3")
+    implementation("com.android.billingclient:billing-ktx:6.1.0")
+
+    // In-App Updates (современная замена play:core)
+    implementation("com.google.android.play:app-update:2.1.0")
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
+
+    // In-App Review (если используешь)
+    implementation("com.google.android.play:review:2.0.1")
+    implementation("com.google.android.play:review-ktx:2.0.1")
+
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-analytics")
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
+}
+
+configurations.all {
+    exclude(group = "com.google.android.play", module = "core")
 }

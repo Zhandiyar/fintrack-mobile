@@ -14,19 +14,27 @@
       },
       "oauth_client": [
         {
-          "client_id": "663807920764-fchdcgoiun4a7vptsci3e5i01rhqq9v2.apps.googleusercontent.com",
+          "client_id": "663807920764-innauq1f825bdoip39dkdof2cose709m.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "kz.finance.fintrack",
-            "certificate_hash": "f1b49ab10dee462ac83fd76322f80d8d23d5950e"
+            "certificate_hash": "e44ef4d32252fe90bb645625af77e6b1b79ccf0e"
           }
         },
         {
-          "client_id": "663807920764-tokuo8q1r1aeff801o7ljncon83jcuu5.apps.googleusercontent.com",
+          "client_id": "663807920764-jqumlhsjq3mfr697o1hjf4u1opqoahfr.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "kz.finance.fintrack",
             "certificate_hash": "07203a46d5a1389dfc3880f33403fe0bdff70921"
+          }
+        },
+        {
+          "client_id": "663807920764-tg0hnbiok5bo3kjcl1a5fklau751bo2i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kz.finance.fintrack",
+            "certificate_hash": "f1b49ab10dee462ac83fd76322f80d8d23d5950e"
           }
         },
         {

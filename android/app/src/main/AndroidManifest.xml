@@ -1,9 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    
+    <uses-permission android:name="com.android.vending.BILLING" />
+
     <application
-        android:label="FintTrack"
+        android:label="FinTrack AI"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="true"
@@ -37,8 +38,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="fin-track.pro" />
-                <data android:scheme="http" android:host="fin-track.pro" />
+                <data android:scheme="https" android:host="fin-track.pro" android:pathPrefix="/reset-password"/>
             </intent-filter>
 
             <intent-filter>
@@ -46,15 +46,6 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="fintrack" android:host="reset-password" />
-            </intent-filter>
-
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-                <data
-                    android:scheme="com.googleusercontent.apps.663807920764-tokuo8q1r1aeff801o7ljncon83jcuu5"
-                    android:path="/"/>
             </intent-filter>
         </activity>
         

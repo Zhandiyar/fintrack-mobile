@@ -1,9 +1,11 @@
 
 
+import 'package:equatable/equatable.dart';
+import 'package:fintrack/features/transaction/models/transaction_category.dart';
 import 'package:fintrack/features/transaction/models/transaction_type.dart' show TransactionType, transactionTypeFromString;
 
 
-class LocalizedTransactionResponseDto {
+class LocalizedTransactionResponseDto extends Equatable {
   final int id;
   final double amount;
   final DateTime date;
@@ -11,8 +13,7 @@ class LocalizedTransactionResponseDto {
   final DateTime updatedAt;
   final String? comment;
   final TransactionType type;
-  final int categoryId;
-  final String categoryName;
+  final TransactionCategoryDto category;
 
   LocalizedTransactionResponseDto({
     required this.id,
@@ -22,9 +23,20 @@ class LocalizedTransactionResponseDto {
     required this.updatedAt,
     this.comment,
     required this.type,
-    required this.categoryId,
-    required this.categoryName
+    required this.category
   });
+
+  @override
+  List<Object?> get props => [
+    id,
+    amount,
+    date,
+    createdAt,
+    updatedAt,
+    comment,
+    type,
+    category,
+  ];
 
   factory LocalizedTransactionResponseDto.fromJson(Map<String, dynamic> json) =>
       LocalizedTransactionResponseDto(
@@ -35,7 +47,6 @@ class LocalizedTransactionResponseDto {
         updatedAt: DateTime.parse(json['updatedAt']),
         comment: json['comment'],
         type: transactionTypeFromString(json['type']),
-        categoryId: json['categoryId'],
-        categoryName: json['categoryName']
+        category: TransactionCategoryDto.fromJson(json['category']),
       );
 }

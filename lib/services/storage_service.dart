@@ -2,43 +2,48 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decode/jwt_decode.dart';
 
 class SecureStorage {
-  static const _tokenKey = 'jwt_token';
-  static const _isGuestKey = 'is_guest';
-  static final _storage = FlutterSecureStorage();
+  static const _access = "access_token";
+  static const _refresh = "refresh_token";
+  static const _guest = "is_guest";
 
-  static Future<void> saveToken(String token) async {
-    await _storage.write(key: _tokenKey, value: token);
-  }
+  static const _storage = FlutterSecureStorage();
 
-  static Future<String?> getToken() async {
-    return await _storage.read(key: _tokenKey);
-  }
+  // --- SAVE TOKENS ---
+  static Future<void> saveTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    await _storage.write(key: _access, value: accessToken);
+    await _storage.write(key: _refresh, value: refreshToken);
 
-  static Future<void> removeToken() async {
-    await _storage.delete(key: _tokenKey);
-    await _storage.delete(key: _isGuestKey);
-  }
-
-  static Future<void> saveIsGuest(bool isGuest) async {
-    await _storage.write(key: _isGuestKey, value: isGuest.toString());
-  }
-
-  static Future<bool> isGuest() async {
-    final token = await getToken();
-    if (token == null) return false;
-
-    final isGuest = await _storage.read(key: _isGuestKey);
-    if (isGuest == 'true') return true;
-
-    Map<String, dynamic> payload = Jwt.parseJwt(token);
-    List roles = payload['roles'] ?? [];
-    final hasGuestRole = roles.contains('ROLE_GUEST');
-    
-    // Синхронизируем статус гостя с токеном
-    if (hasGuestRole) {
-      await saveIsGuest(true);
+    bool isGuest = false;
+    try {
+      final payload = Jwt.parseJwt(accessToken);
+      final roles = (payload['roles'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList();
+      isGuest = roles.contains("ROLE_GUEST");
+    } catch (e) {
+      // можно залогировать, но не падать
     }
-    
-    return hasGuestRole;
+
+    await _storage.write(key: _guest, value: isGuest ? 'true' : 'false');
+  }
+
+  // --- READ ---
+  static Future<String?> getAccessToken() => _storage.read(key: _access);
+  static Future<String?> getRefreshToken() => _storage.read(key: _refresh);
+
+  static Future<void> setGuest(bool value) async {
+    await _storage.write(key: _guest, value: value ? 'true' : 'false');
+  }
+  static Future<bool> isGuest() async {
+    final v = await _storage.read(key: _guest);
+    return v == "true";
+  }
+
+  // --- CLEAR ---
+  static Future<void> clear() async {
+    await _storage.deleteAll();
   }
 }

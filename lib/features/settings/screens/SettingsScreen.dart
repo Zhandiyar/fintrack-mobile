@@ -2,17 +2,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../blocs/theme/theme_bloc.dart';
-import '../blocs/theme/theme_event.dart';
-import '../blocs/theme/theme_state.dart';
 import '../blocs/currency/currency_bloc.dart';
 import '../blocs/currency/currency_event.dart';
 import '../blocs/currency/currency_state.dart';
-import '../models/currency.dart';
-import '../utils/currency_formatter.dart';
-import '../blocs/settings/settings_bloc.dart';
-import '../blocs/settings/settings_event.dart';
-import '../blocs/settings/settings_state.dart';
+import '../blocs/settings_event.dart';
+import '../blocs/settings_state.dart';
+import '../model/currency_formatter.dart';
+import '../blocs/settings_bloc.dart';
+import '../model/currency.dart';
+import '../blocs/theme/theme_bloc.dart';
+import '../blocs/theme/theme_event.dart';
+import '../blocs/theme/theme_state.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -426,7 +426,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _openPrivacyPolicy(BuildContext context) async {
-    final Uri url = Uri.parse('https://zhandiyar.github.io/privacy-policy/');
+    final Uri url = Uri.parse('https://zhandiyar.github.io/fintrack-mobile/privacy-policy.html');
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {

@@ -1,8 +1,9 @@
+import 'package:fintrack/features/settings/blocs/settings_event.dart';
+import 'package:fintrack/features/settings/blocs/settings_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fintrack/repositories/settings_repository.dart';
-import 'package:fintrack/blocs/settings/settings_event.dart';
-import 'package:fintrack/blocs/settings/settings_state.dart';
 import 'package:dio/dio.dart';
+
+import '../repository/settings_repository.dart';
 
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final SettingsRepository _repository;

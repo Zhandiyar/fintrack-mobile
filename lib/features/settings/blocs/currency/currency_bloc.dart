@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
-import '../../models/currency.dart';
+import '../../model/currency.dart';
 import 'currency_event.dart';
 import 'currency_state.dart';
 

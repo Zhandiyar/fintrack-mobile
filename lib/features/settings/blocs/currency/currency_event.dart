@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../models/currency.dart';
+
+import '../../model/currency.dart';
 
 abstract class CurrencyEvent extends Equatable {
   const CurrencyEvent();

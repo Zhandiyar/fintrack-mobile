@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../models/currency.dart';
+
+import '../../model/currency.dart';
 
 class CurrencyState extends Equatable {
   final Currency currency;

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fintrack/blocs/auth/auth_bloc.dart';
-import 'package:fintrack/blocs/auth/auth_event.dart';
-import 'package:fintrack/blocs/auth/auth_state.dart';
-import '../../widgets/custom_text_field.dart';
+import 'package:fintrack/features/auth/blocs/auth_bloc.dart';
+import '../../../widgets/custom_text_field.dart';
+import '../blocs/auth_event.dart';
+import '../blocs/auth_state.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override

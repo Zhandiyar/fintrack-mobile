@@ -1,9 +1,11 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
-import 'package:fintrack/repositories/auth_repository.dart';
 import 'package:fintrack/services/storage_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../repository/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -18,6 +20,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterRequested>(_onRegisterRequested);
     on<ForgotPasswordRequested>(_onForgotPasswordRequested);
     on<ResetPasswordRequested>(_onResetPasswordRequested);
+    on<ValidateResetToken>(_onValidateToken);
     on<LogoutRequested>(_onLogoutRequested);
     on<GoogleSignInRequested>(_onGoogleSignInRequested);
     on<GuestLoginRequested>(_onGuestLoginRequested);
@@ -26,9 +29,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onAppStarted(AppStarted event, Emitter<AuthState> emit) async {
     try {
-      final token = await SecureStorage.getToken();
+      final token = await SecureStorage.getAccessToken();
       if (token != null) {
-        emit(AuthAuthenticated(token));
+        final isGuest = await SecureStorage.isGuest();
+        emit(AuthAuthenticated(token, isGuest: isGuest));
       } else {
         emit(AuthInitial());
       }
@@ -38,15 +42,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onLoginRequested(LoginRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onLoginRequested(
+      LoginRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       await _authRepository.login(event.username, event.password);
-      final token = await SecureStorage.getToken();
+      final token = await SecureStorage.getAccessToken();
       debugPrint("✅ Полученный токен из хранилища: $token");
 
       if (token != null) {
-        emit(AuthAuthenticated(token));
+        await SecureStorage.setGuest(false);
+        final isGuest = await SecureStorage.isGuest();
+        emit(AuthAuthenticated(token, isGuest: isGuest));
       } else {
         emit(AuthFailure("Ошибка: Токен не был сохранен"));
       }
@@ -56,15 +63,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onRegisterRequested(RegisterRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onRegisterRequested(
+      RegisterRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      await _authRepository.register(event.username, event.email, event.password);
+      await _authRepository.register(
+          event.username, event.email, event.password);
       debugPrint("✅ Регистрация прошла успешно, выполняем вход...");
-      final token = await SecureStorage.getToken();
+      final token = await SecureStorage.getAccessToken();
 
       if (token != null) {
-        emit(AuthAuthenticated(token));
+        await SecureStorage.setGuest(false);
+        final isGuest = await SecureStorage.isGuest();
+        emit(AuthAuthenticated(token, isGuest: isGuest));
       } else {
         emit(AuthFailure("Ошибка: Токен не был сохранен"));
       }
@@ -74,7 +85,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onForgotPasswordRequested(ForgotPasswordRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onForgotPasswordRequested(
+      ForgotPasswordRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       await _authRepository.forgotPassword(event.email);
@@ -85,8 +97,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-
-  Future<void> _onResetPasswordRequested(ResetPasswordRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onResetPasswordRequested(
+      ResetPasswordRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       await _authRepository.resetPassword(event.token, event.newPassword);
@@ -98,9 +110,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onValidateToken(
-      ValidateResetToken event,
-      Emitter<AuthState> emit,
-      ) async {
+    ValidateResetToken event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     try {
       final isValid = await _authRepository.validateResetToken(event.token);
@@ -114,30 +126,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onLogoutRequested(LogoutRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onLogoutRequested(
+    LogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     try {
-      debugPrint('🔵 Обработка запроса на выход...');
       await _authRepository.logout();
-      debugPrint('✅ Выход выполнен успешно');
-      emit(AuthLoggedOut());
-    } catch (e) {
-      debugPrint('❌ Ошибка при выходе: $e');
-      emit(AuthFailure(_getErrorMessage(e)));
-      // После ошибки все равно переходим в начальное состояние
+    } finally {
       emit(AuthLoggedOut());
     }
   }
 
-  Future<void> _onGoogleSignInRequested(GoogleSignInRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onGoogleSignInRequested(
+      GoogleSignInRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       await _authRepository.signInWithGoogle();
-      final token = await SecureStorage.getToken();
+      final token = await SecureStorage.getAccessToken();
       debugPrint("✅ Получен токен после Google Sign-In: $token");
 
       if (token != null) {
-        emit(AuthAuthenticated(token));
+        await SecureStorage.setGuest(false);
+        final isGuest = await SecureStorage.isGuest();
+        emit(AuthAuthenticated(token, isGuest: isGuest));
       } else {
         emit(AuthFailure("Ошибка: Токен не был сохранен"));
       }
@@ -147,15 +159,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onGuestLoginRequested(GuestLoginRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onGuestLoginRequested(
+      GuestLoginRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       await _authRepository.createGuest();
-      final token = await SecureStorage.getToken();
+      final token = await SecureStorage.getAccessToken();
       debugPrint("✅ Вход как гость выполнен успешно");
 
       if (token != null) {
-        emit(AuthAuthenticated(token));
+        final isGuest = await SecureStorage.isGuest();
+        emit(AuthAuthenticated(token, isGuest: isGuest));
       } else {
         emit(AuthFailure("Ошибка: Токен не был сохранен"));
       }
@@ -165,16 +179,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onRegisterFromGuestRequested(RegisterFromGuestRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onRegisterFromGuestRequested(
+      RegisterFromGuestRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      await _authRepository.registerFromGuest(event.username, event.email, event.password);
+      await _authRepository.registerFromGuest(
+          event.username, event.email, event.password);
       debugPrint("✅ Регистрация из гостя прошла успешно");
-      final token = await SecureStorage.getToken();
+      final token = await SecureStorage.getAccessToken();
 
       if (token != null) {
         emit(AuthSuccess("Регистрация успешно завершена"));
-        emit(AuthAuthenticated(token));
+        final isGuest = await SecureStorage.isGuest();
+        emit(AuthAuthenticated(token, isGuest: isGuest));
       } else {
         emit(AuthFailure("Ошибка: Токен не был сохранен"));
       }
@@ -222,7 +239,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
         case DioExceptionType.unknown:
         default:
-          return error.message ?? "Произошла неизвестная ошибка. Проверьте соединение";
+          return error.message ??
+              "Произошла неизвестная ошибка. Проверьте соединение";
       }
     }
 

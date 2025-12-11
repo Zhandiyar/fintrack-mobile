@@ -2,9 +2,9 @@ import 'package:fintrack/widgets/custom_text_field.dart';
 import 'package:fintrack/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../blocs/auth/auth_bloc.dart';
-import '../../blocs/auth/auth_event.dart';
-import '../../blocs/auth/auth_state.dart';
+import '../blocs/auth_bloc.dart';
+import '../blocs/auth_event.dart';
+import '../blocs/auth_state.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -73,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                "Вход в FinTrack",
+                "Вход в FinTrack AI",
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -126,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     );
                   } else if (state is AuthAuthenticated) {
-                    Navigator.pushReplacementNamed(context, '/dashboard');
+                    Navigator.pushReplacementNamed(context, '/main');
                   }
                 },
                 builder: (context, state) {

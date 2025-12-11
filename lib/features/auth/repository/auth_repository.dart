@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:fintrack/services/api_client.dart';
 import 'package:fintrack/services/storage_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -6,14 +8,14 @@ import 'package:flutter/foundation.dart';
 
 class AuthRepository {
   final ApiClient _apiClient;
+
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
-    serverClientId: '663807920764-i8k5osbt3ug04iotrr1cu4mgpfrbjb45.apps.googleusercontent.com',
-    clientId: defaultTargetPlatform == TargetPlatform.iOS 
-      ? '663807920764-fqsf7p68appvnlm7j2ig3sj46cklrdfr.apps.googleusercontent.com'
-      : null,
-    forceCodeForRefreshToken: true,
+    scopes: ['email'],
+    clientId: Platform.isIOS
+        ? '663807920764-fqsf7p68appvnlm7j2ig3sj46cklrdfr.apps.googleusercontent.com'
+        : null, // ANDROID должен использовать clientId из google-services.json
   );
+
 
   AuthRepository(this._apiClient);
 
@@ -34,8 +36,13 @@ class AuthRepository {
           )
         );
       }
-      
-      await SecureStorage.saveToken(response.data['data']);
+
+      final data = response.data['data'];
+
+      await SecureStorage.saveTokens(
+        accessToken: data['accessToken'],
+        refreshToken: data['refreshToken'],
+      );
       debugPrint("✅ Успешная авторизация. Токен: ${response.data['data']}");
     } on DioException catch (e) {
       debugPrint("❌ Ошибка DIO при входе: ${e.response?.data}");
@@ -65,7 +72,12 @@ class AuthRepository {
         );
       }
 
-      await SecureStorage.saveToken(response.data['data']);
+      final data = response.data['data'];
+
+      await SecureStorage.saveTokens(
+        accessToken: data['accessToken'],
+        refreshToken: data['refreshToken'],
+      );
       debugPrint("✅ Успешная регистрация. Токен: ${response.data['data']}");
     } on DioException catch (e) {
       debugPrint("❌ Ошибка DIO при регистрации: ${e.response?.data}");
@@ -134,59 +146,77 @@ class AuthRepository {
 
   Future<void> logout() async {
     try {
-      await SecureStorage.removeToken();
-      
-      final isSignedIn = await _googleSignIn.isSignedIn();
-      if (isSignedIn) {
-        await _googleSignIn.signOut();
-        
-        if (defaultTargetPlatform == TargetPlatform.iOS) {
-          await _googleSignIn.disconnect();
-        }
+      final refresh = await SecureStorage.getRefreshToken();
+      if (refresh != null) {
+        await _apiClient.dio.post("/api/auth/logout", data: {
+          "refreshToken": refresh,
+        });
       }
+
+      await SecureStorage.clear();
+      await _googleSignIn.signOut();
     } catch (e) {
-      debugPrint('❌ Ошибка при выходе: $e');
-      throw Exception('Ошибка при выходе из системы');
+      await SecureStorage.clear();
     }
   }
 
   Future<void> signInWithGoogle() async {
     try {
       debugPrint('🔵 Начинаем вход через Google...');
-      
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      // 1) Пробуем войти без UI
+      GoogleSignInAccount? googleUser =
+      await _googleSignIn.signInSilently();
+
+      // 2) Если не вошёл — показываем окно выбора аккаунта
+      googleUser ??= await _googleSignIn.signIn();
+
       if (googleUser == null) {
         throw Exception('Вход отменён пользователем');
       }
 
-      debugPrint('✅ Успешная авторизация: ${googleUser.email}');
-      
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final String? idToken = googleAuth.idToken;
-      
-      if (idToken == null) {
-        throw Exception('Не удалось получить токен Google');
-      }
-      
-      final response = await _apiClient.dio.post('/api/auth/google-signin', data: {
-        "idToken": idToken,
-        "platform": defaultTargetPlatform.toString(),
-      });
+      debugPrint('✅ Google email: ${googleUser.email}');
 
-      if (response.data == null || response.data['success'] == false) {
-        throw Exception(response.data?['message'] ?? 'Ошибка при входе через Google');
+      final googleAuth = await googleUser.authentication;
+
+      if (googleAuth.idToken == null) {
+        throw Exception('Не удалось получить idToken');
       }
-      
-      await SecureStorage.saveToken(response.data['data']);
-      
+
+      final response = await _apiClient.dio.post(
+        '/api/auth/google-signin',
+        data: {
+          "idToken": googleAuth.idToken,
+          "platform": Platform.isAndroid
+              ? "android"
+              : Platform.isIOS
+              ? "ios"
+              : "web",
+        },
+      );
+
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? "Ошибка сервера Google Sign-In");
+      }
+
+      final data = response.data['data'];
+
+      await SecureStorage.saveTokens(
+        accessToken: data['accessToken'],
+        refreshToken: data['refreshToken'],
+      );
+
+      debugPrint("🎉 Успешный вход через Google");
+
     } on DioException catch (e) {
-      debugPrint('❌ Ошибка сети: ${e.response?.statusCode}');
+      debugPrint("❌ Dio ошибка при Google входе: ${e.response?.data}");
       throw Exception(_handleDioException(e));
     } catch (e) {
-      debugPrint('❌ Ошибка: ${e.toString()}');
-      throw Exception('Ошибка входа через Google: ${e.toString()}');
+      debugPrint("❌ Google Sign-In ошибка: $e");
+      throw Exception("Ошибка Google Sign-In: $e");
     }
   }
+
 
   String _handleDioException(DioException e) {
     if (e.response != null) {
@@ -287,9 +317,15 @@ class AuthRepository {
         );
       }
 
-      await SecureStorage.saveToken(response.data['data']);
-      await SecureStorage.saveIsGuest(true);
-      debugPrint("✅ Успешное создание гостя. Токен: ${response.data['data']}");
+      final data = response.data['data'];
+
+      await SecureStorage.saveTokens(
+        accessToken: data['accessToken'],
+        refreshToken: data['refreshToken'],
+      );
+      await SecureStorage.setGuest(true);
+
+      debugPrint("✅ Успешное создание гостя.");
     } on DioException catch (e) {
       debugPrint("❌ Ошибка DIO при создании гостя: ${e.response?.data}");
       throw Exception(_handleDioException(e));
@@ -303,7 +339,7 @@ class AuthRepository {
     try {
       debugPrint("📤 Отправка запроса регистрации из гостя...");
 
-      final currentToken = await SecureStorage.getToken();
+      final currentToken = await SecureStorage.getAccessToken();
       if (currentToken == null) {
         debugPrint("❗ Ошибка: Токен отсутствует перед регистрацией из гостя");
         throw Exception('Отсутствует токен гостя. Пожалуйста, войдите снова.');
@@ -331,10 +367,13 @@ class AuthRepository {
         );
       }
 
-      final newToken = response.data['data'];
-      await SecureStorage.saveToken(newToken);
-      await SecureStorage.saveIsGuest(false);
-      debugPrint("✅ Успешная регистрация из гостя. Новый токен: $newToken");
+      final data = response.data['data'];
+
+      await SecureStorage.saveTokens(
+        accessToken: data['accessToken'],
+        refreshToken: data['refreshToken'],
+      );
+      debugPrint("✅ Успешная регистрация из гостя.");
     } on DioException catch (e) {
       debugPrint("❌ Ошибка DIO при регистрации из гостя: ${e.response?.data}");
       throw Exception(_handleRegistrationError(e));

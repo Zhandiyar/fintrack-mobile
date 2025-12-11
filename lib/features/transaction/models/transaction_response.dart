@@ -1,5 +1,6 @@
 
 
+import 'transaction_category.dart'; // Импортируй класс выше
 import 'transaction_type.dart';
 
 class TransactionResponseDto {
@@ -10,9 +11,7 @@ class TransactionResponseDto {
   final DateTime updatedAt;
   final String? comment;
   final TransactionType type;
-  final int categoryId;
-  final String categoryNameRu;
-  final String categoryNameEn;
+  final TransactionCategoryDto category;
 
   TransactionResponseDto({
     required this.id,
@@ -22,9 +21,7 @@ class TransactionResponseDto {
     required this.updatedAt,
     this.comment,
     required this.type,
-    required this.categoryId,
-    required this.categoryNameRu,
-    required this.categoryNameEn,
+    required this.category,
   });
 
   factory TransactionResponseDto.fromJson(Map<String, dynamic> json) =>
@@ -36,8 +33,9 @@ class TransactionResponseDto {
         updatedAt: DateTime.parse(json['updatedAt']),
         comment: json['comment'],
         type: transactionTypeFromString(json['type']),
-        categoryId: json['categoryId'],
-        categoryNameRu: json['categoryNameRu'],
-        categoryNameEn: json['categoryNameEn'],
+        category: TransactionCategoryDto.fromJson(json['category']),
       );
+
+  // Локализация имени категории
+  String displayCategoryName() => category.name;
 }

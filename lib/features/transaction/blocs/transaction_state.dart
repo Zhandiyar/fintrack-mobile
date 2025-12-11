@@ -22,8 +22,12 @@ class TransactionLoaded extends TransactionState {
 }
 
 class TransactionSuccess extends TransactionState {
-  final TransactionResponseDto response;
-  const TransactionSuccess(this.response);
+  final TransactionResponseDto tx;
+
+  const TransactionSuccess(this.tx);
+
+  @override
+  List<Object?> get props => [tx];
 }
 
 class TransactionError extends TransactionState {

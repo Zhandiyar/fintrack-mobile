@@ -8,6 +8,7 @@ class TransactionRequestDto {
   final String? comment;
   final TransactionType type;
   final int categoryId;
+  final String lang;
 
   TransactionRequestDto({
     this.id,
@@ -16,6 +17,7 @@ class TransactionRequestDto {
     this.comment,
     required this.type,
     required this.categoryId,
+    required this.lang
   });
 
   Map<String, dynamic> toJson() => {
@@ -25,5 +27,6 @@ class TransactionRequestDto {
     'comment': comment,
     'type': transactionTypeToString(type),
     'categoryId': categoryId,
+    'lang': lang
   };
 }

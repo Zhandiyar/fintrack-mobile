@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../models/analytics_summary.dart';
-import '../../utils/currency_formatter.dart';
+
+import '../../settings/model/currency_formatter.dart';
+import '../models/analytics_summary.dart';
 
 const double _kPadding = 16.0;
 const double _kSpacing = 8.0;
@@ -23,7 +25,7 @@ class AverageExpenseCard extends StatelessWidget {
             CircleAvatar(
               backgroundColor: Theme.of(context).colorScheme.primaryContainer,
               child: Icon(
-                Icons.trending_up,
+                Icons.savings,
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
@@ -33,18 +35,19 @@ class AverageExpenseCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Средний расход',
+                    'Чистый доход',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   Text(
-                    summary.averageLabel,
+                    'Изменение дохода: ${summary.incomeChange.toStringAsFixed(1)}%, '
+                        'расхода: ${summary.expenseChange.toStringAsFixed(1)}%',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
             ),
             Text(
-              CurrencyFormatter.format(summary.average, context),
+              CurrencyFormatter.format(summary.netIncome, context),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.bold,
@@ -55,4 +58,4 @@ class AverageExpenseCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

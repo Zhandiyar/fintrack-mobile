@@ -1,24 +1,24 @@
 import 'package:dio/dio.dart';
-import 'package:fintrack/services/api_expense_client.dart';
-import '../services/api_client.dart';
+import '../../../services/api_client.dart';
+import '../../../services/storage_service.dart';
 import '../models/analytics_summary.dart';
-import '../models/category_expense_details.dart';
-import '../models/expense.dart';
-import '../models/expense_category.dart';
-import '../services/storage_service.dart';
+import '../models/analytics_categories.dart';
+import '../models/period_type.dart';
+
 
 class AnalyticsRepository {
-  final ApiExpenseClient _apiClient;
+  final ApiClient _apiClient;
 
   AnalyticsRepository(this._apiClient);
 
+  /// Получить общую сводку (summary)
   Future<AnalyticsSummary> getSummary({
     required PeriodType periodType,
     required int year,
     int? month,
     int? day,
   }) async {
-    final token = await SecureStorage.getToken();
+    final token = await SecureStorage.getAccessToken();
     if (token == null) {
       throw Exception('Отсутствует токен авторизации');
     }
@@ -32,7 +32,7 @@ class AnalyticsRepository {
       };
 
       final response = await _apiClient.dio.get(
-        '/expenses/analytics/summary',
+        '/api/analytics/summary',
         queryParameters: queryParams,
         options: Options(
           headers: {
@@ -53,13 +53,15 @@ class AnalyticsRepository {
     }
   }
 
-  Future<List<CategoryExpenseDetails>> getCategoryDetails({
+  /// Получить категории аналитики
+  Future<AnalyticsCategories> getCategories({
     required PeriodType periodType,
     required int year,
     int? month,
     int? day,
+    String lang = "ru",
   }) async {
-    final token = await SecureStorage.getToken();
+    final token = await SecureStorage.getAccessToken();
     if (token == null) {
       throw Exception('Отсутствует токен авторизации');
     }
@@ -70,10 +72,11 @@ class AnalyticsRepository {
         'year': year.toString(),
         if (month != null) 'month': month.toString(),
         if (day != null) 'day': day.toString(),
+        'lang': lang,
       };
 
       final response = await _apiClient.dio.get(
-        '/expenses/analytics/summary/categories',
+        '/api/analytics/categories',
         queryParameters: queryParams,
         options: Options(
           headers: {
@@ -83,10 +86,9 @@ class AnalyticsRepository {
         ),
       );
 
-      final List<dynamic> data = response.data;
-      return data.map((json) => CategoryExpenseDetails.fromJson(json)).toList();
+      return AnalyticsCategories.fromJson(response.data);
     } catch (e) {
-      print('Ошибка при получении деталей по категориям: $e');
+      print('Ошибка при получении категорий: $e');
       if (e is DioException) {
         print('Статус код: ${e.response?.statusCode}');
         print('Данные ответа: ${e.response?.data}');
@@ -94,44 +96,4 @@ class AnalyticsRepository {
       rethrow;
     }
   }
-
-  Future<List<Expense>> getCategoryExpenses({
-    required ExpenseCategory category,
-    int page = 0,
-    int size = 20,
-  }) async {
-    final token = await SecureStorage.getToken();
-    if (token == null) {
-      throw Exception('Отсутствует токен авторизации');
-    }
-
-    try {
-      final queryParams = {
-        'category': category.name,
-        'page': page.toString(),
-        'size': size.toString(),
-      };
-
-      final response = await _apiClient.dio.get(
-        '/expenses/analytics/category',
-        queryParameters: queryParams,
-        options: Options(
-          headers: {
-            "Authorization": "Bearer $token",
-            "Content-Type": "application/json",
-          },
-        ),
-      );
-
-      final List<dynamic> data = response.data;
-      return data.map((json) => Expense.fromJson(json)).toList();
-    } catch (e) {
-      print('Ошибка при получении расходов по категории: $e');
-      if (e is DioException) {
-        print('Статус код: ${e.response?.statusCode}');
-        print('Данные ответа: ${e.response?.data}');
-      }
-      rethrow;
-    }
-  }
-} 
+}
